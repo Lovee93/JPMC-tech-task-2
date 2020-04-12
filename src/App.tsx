@@ -8,6 +8,7 @@ import './App.css';
  */
 interface IState {
   data: ServerRespond[],
+  showGraph: boolean, //declaring a flag that we will use later
 }
 
 /**
@@ -22,6 +23,7 @@ class App extends Component<{}, IState> {
       // data saves the server responds.
       // We use this state to parse data down to the child element (Graph) as element property
       data: [],
+      showGraph: false //setting this flag as false by default
     };
   }
 
@@ -29,19 +31,35 @@ class App extends Component<{}, IState> {
    * Render Graph react component with state.data parse as property data
    */
   renderGraph() {
-    return (<Graph data={this.state.data}/>)
+    //we want to render graph only when the flag is true (i.e. Start Streaming Data is clicked), otherwise 3 dots were shown without data 
+    if(this.state.showGraph){
+      return (<Graph data={this.state.data}/>)
+    }
   }
 
   /**
    * Get new data from server and update the state with the new data
    */
   getDataFromServer() {
-    DataStreamer.getData((serverResponds: ServerRespond[]) => {
-      // Update the state by creating a new array of data that consists of
+    let x = 0;
+    const interval = setInterval(() => {
+      DataStreamer.getData((serverResponds: ServerRespond[]) => {
+        // Update the state by creating a new array of data that consists of
       // Previous data in the state and the new data from server
-      this.setState({ data: [...this.state.data, ...serverResponds] });
-    });
+        this.setState({ 
+          data: [...this.state.data, ...serverResponds], //spread function to update the prev state with new
+          //data: serverResponds, ---> this also seems to work fine
+          showGraph: true 
+        });
+      });
+      x++;
+      if(x > 1000) {
+        clearInterval(interval);
+      }
+    }, 100);
   }
+    
+      
 
   /**
    * Render the App react component
